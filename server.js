@@ -1,28 +1,23 @@
 const express = require('express');
 const cors = require('cors');
 const https = require('https');
-
-// Load the key from your specific absolute path
 require('dotenv').config({ path: './api.env' });
 
 const app = express();
 
-app.use(cors()); 
+// Allow the specific origin to be safe
+app.use(cors({
+    origin: "https://aic.artificial-intelligence.workers.dev"
+})); 
 app.use(express.json());
 
 const API_KEY = process.env.API_KEY;
-
-if (!API_KEY) {
-    console.error("❌ ERROR: API_KEY not found in api.env");
-} else {
-    console.log("✅ API Key Loaded. Server ready.");
-}
 
 app.post('/chat', (req, res) => {
     const postData = JSON.stringify(req.body);
 
     const options = {
-        hostname: 'api.groq.com', // FIXED: Removed '://' and added 'api.'
+        hostname: 'api.groq.com',
         path: '/openai/v1/chat/completions',
         method: 'POST',
         headers: {
@@ -36,13 +31,11 @@ app.post('/chat', (req, res) => {
         let body = '';
         response.on('data', (chunk) => { body += chunk; });
         response.on('end', () => {
-            res.setHeader('Content-Type', 'application/json');
-            res.status(response.statusCode).send(body);
+            res.status(response.statusCode).set('Content-Type', 'application/json').send(body);
         });
     });
 
     request.on('error', (err) => {
-        console.error("Groq API Error:", err.message);
         res.status(500).json({ error: "Connection to Groq failed" });
     });
 
@@ -50,4 +43,6 @@ app.post('/chat', (req, res) => {
     request.end();
 });
 
-app.listen(3000, () => console.log('Backend running at http://localhost:3000'));
+// FIX: Use process.env.PORT for Render deployment
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
