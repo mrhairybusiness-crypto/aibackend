@@ -18,12 +18,13 @@ app.post('/', (req, res) => {
     const postData = JSON.stringify(req.body);
 
     const options = {
-        hostname: '://groq.com',
+        hostname: 'api.groq.com', // FIXED: No :// and added api.
         path: '/openai/v1/chat/completions',
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${API_KEY}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(postData)
         }
     };
 
@@ -31,16 +32,13 @@ app.post('/', (req, res) => {
         let body = '';
         apiRes.on('data', (chunk) => body += chunk);
         apiRes.on('end', () => {
-            // Log for your Render dashboard so you can see if the key is invalid
-            if (apiRes.statusCode !== 200) console.log("Groq Error:", body);
-            
             res.setHeader('Content-Type', 'application/json');
             res.status(apiRes.statusCode).send(body);
         });
     });
 
     request.on('error', (e) => {
-        console.error(e);
+        console.error("Connection Error:", e.message);
         res.status(500).json({ error: "API Failure", details: e.message });
     });
 
@@ -49,4 +47,5 @@ app.post('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => console.log(`Live on ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`Server live on ${PORT}`));
+
