@@ -1,23 +1,18 @@
 const express = require('express');
 const cors = require('cors');
 const https = require('https');
-require('dotenv').config({ path: './api.env' });
-
 const app = express();
 
-// Allow the specific origin to be safe
-app.use(cors({
-    origin: "https://aic.artificial-intelligence.workers.dev"
-})); 
+app.use(cors()); 
 app.use(express.json());
 
-const API_KEY = process.env.API_KEY;
+const API_KEY = "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";
 
-app.post('/chat', (req, res) => {
+// CHANGED: Now listening on the root "/" to match your link
+app.post('/', (req, res) => {
     const postData = JSON.stringify(req.body);
-
     const options = {
-        hostname: 'api.groq.com',
+        hostname: '://groq.com',
         path: '/openai/v1/chat/completions',
         method: 'POST',
         headers: {
@@ -31,18 +26,17 @@ app.post('/chat', (req, res) => {
         let body = '';
         response.on('data', (chunk) => { body += chunk; });
         response.on('end', () => {
-            res.status(response.statusCode).set('Content-Type', 'application/json').send(body);
+            res.setHeader('Content-Type', 'application/json');
+            res.status(response.statusCode).send(body);
         });
     });
 
-    request.on('error', (err) => {
-        res.status(500).json({ error: "Connection to Groq failed" });
-    });
-
+    request.on('error', (err) => { res.status(500).json({ error: "Failed" }); });
     request.write(postData);
     request.end();
 });
 
-// FIX: Use process.env.PORT for Render deployment
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Running on ${PORT}`));
+
+
