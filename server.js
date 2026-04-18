@@ -12,7 +12,7 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-const API_KEY = "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";
+const API_KEY = "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";
 
 app.post('/', (req, res) => {
     const postData = JSON.stringify(req.body);
@@ -48,4 +48,3 @@ app.post('/', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => console.log(`Server live on ${PORT}`));
-
