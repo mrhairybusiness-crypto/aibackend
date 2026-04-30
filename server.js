@@ -12,7 +12,7 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-const API_KEY = "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";
+const API_KEY = "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";
 
 app.post('/', (req, res) => {
     const postData = JSON.stringify(req.body);
