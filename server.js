@@ -1,6 +1,7 @@
 const express = require('express');
 const https = require('https');
 const app = express();
+require('dotenv').config({ path: "api.env" })
 
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -11,8 +12,7 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
-
-const API_KEY = "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";
+const API_KEY = process.env.API_KEY;
 
 app.post('/', (req, res) => {
     const postData = JSON.stringify(req.body);
