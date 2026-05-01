@@ -1,7 +1,9 @@
 const express = require('express');
 const https = require('https');
 const app = express();
-require('dotenv').config({ path: path.resolve(__dirname, 'api.env') })
+const path = require('path'); // Add this line!
+require('dotenv').config({ path: path.resolve(__dirname, 'api.env') });
+
 
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
