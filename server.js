@@ -1,8 +1,7 @@
 const express = require('express');
 const https = require('https');
 const app = express();
-const path = require('path'); // Add this line!
-require('dotenv').config({ path: path.resolve(__dirname, 'api.env') });
+require('dotenv').config()
 
 
 app.use((req, res, next) => {
@@ -14,7 +13,7 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
-const API_KEY = process.env.API_KEY;
+const API_KEY = process.env.API_KEY
 
 app.post('/', (req, res) => {
     const postData = JSON.stringify(req.body);
