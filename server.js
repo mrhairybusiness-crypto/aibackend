@@ -13,7 +13,7 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-// Grouping your keys into an array
+// Put keys in an array for easy cycling
 const KEYS = [
     process.env.API_KEY,
     process.env.API_KEYTWO,
@@ -21,30 +21,21 @@ const KEYS = [
     process.env.API_KEYFOUR
 ];
 
-// This pointer stays alive as long as the server is running
-let currentKeyIndex = 0;
-
 app.post('/', (req, res) => {
     const postData = JSON.stringify(req.body);
-    let attempts = 0;
 
-    const makeRequest = (targetIndex) => {
-        // Stop if we have cycled through all keys and none worked
-        if (attempts >= KEYS.length) {
-            console.error("CRITICAL: All API keys exhausted or failing.");
-            return res.status(500).json({ error: "All API keys failed." });
+    // Helper function to try a specific key index
+    const makeRequest = (keyIndex) => {
+        if (keyIndex >= KEYS.length) {
+            return res.status(500).json({ error: "All API keys failed or exhausted." });
         }
 
-        // The % (modulo) ensures that if targetIndex is 4, it loops back to 0
-        const actualIndex = targetIndex % KEYS.length;
-        attempts++;
-
         const options = {
-            hostname: '://groq.com',
+            hostname: 'api.groq.com',
             path: '/openai/v1/chat/completions',
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${KEYS[actualIndex]}`,
+                'Authorization': `Bearer ${KEYS[keyIndex]}`,
                 'Content-Type': 'application/json',
                 'Content-Length': Buffer.byteLength(postData)
             }
@@ -54,32 +45,28 @@ app.post('/', (req, res) => {
             let body = '';
             apiRes.on('data', (chunk) => body += chunk);
             apiRes.on('end', () => {
-                // If the API returns an error (401, 429, 500, etc.)
+                // If API returns an error (like 401, 429, or 500), try the next key
                 if (apiRes.statusCode !== 200) {
-                    console.warn(`Key ${actualIndex} failed with status ${apiRes.statusCode}. Rotating...`);
-                    currentKeyIndex++; // Update global pointer
-                    return makeRequest(currentKeyIndex); 
+                    console.log(`Key ${keyIndex} failed (${apiRes.statusCode}). Trying next...`);
+                    return makeRequest(keyIndex + 1);
                 }
-
-                // Success!
                 res.setHeader('Content-Type', 'application/json');
                 res.status(200).send(body);
             });
         });
 
         request.on('error', (e) => {
-            console.error(`Connection Error on Key ${actualIndex}:`, e.message);
-            currentKeyIndex++; // Update global pointer
-            makeRequest(currentKeyIndex);
+            console.error(`Connection Error with key ${keyIndex}:`, e.message);
+            makeRequest(keyIndex + 1);
         });
 
         request.write(postData);
         request.end();
     };
 
-    // Start the attempt from the last known working key index
-    makeRequest(currentKeyIndex);
+    // Start with the first key
+    makeRequest(0);
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => console.log(`Server live on ${PORT} using ${KEYS.length} keys`));
+app.listen(PORT, '0.0.0.0', () => console.log(`Server live on ${PORT}`));
